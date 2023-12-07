@@ -55,7 +55,7 @@ export interface IAuth {
   isAuth: boolean;
   token: string | null;
   role: USER_ROLE;
-  user: Avocat | Client | Admin | null;
+  user: Avocat | null; // | Client | Admin
 }
 
 export interface IAuthContext {
@@ -63,7 +63,7 @@ export interface IAuthContext {
   logout: () => void;
   hydrateAuth: () => void;
   persistAuth: () => void;
-  setUser: (user: Client | Admin | Avocat) => void;
+  setUser: (user: /*Client | Admin |*/ Avocat) => void;
   setRoleAndToken: (token: string, role: USER_ROLE) => void;
 }
 
@@ -88,7 +88,7 @@ export const AuthContextProvider: React.FC<IAuthContextProviderProps> = ({
     setAuth(prev => ({ ...prev, isAuth: true, token, role }));
 
   /**set current user data */
-  const setUser = (user: Client | Admin | Avocat) => {
+  const setUser = (user: /*Client | Admin | */ Avocat) => {
     setAuth(prev => ({ ...prev, user }));
   };
 
@@ -100,6 +100,7 @@ export const AuthContextProvider: React.FC<IAuthContextProviderProps> = ({
   const hydrateAuth = () => {
     const authFromLocal = window.localStorage.getItem("auth");
     if (authFromLocal?.length === 0 || authFromLocal === null) return;
+    console.log("hydrating auth from local storage", authFromLocal);
     setAuth(JSON.parse(window.localStorage.getItem("auth") || "") as IAuth);
   };
 

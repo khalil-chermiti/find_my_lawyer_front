@@ -31,7 +31,7 @@ const UseSignin = () => {
     console.log("response", response);
     if (response.token) {
       auth.setRoleAndToken(response.token, response.role[0]);
-      navigate("/");
+      navigate("/advocate");
     } else {
       alert("error " + response.message);
     }
