@@ -26,9 +26,9 @@ const UseSignin = () => {
 
   const handleUserSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let response = null;
-    response = await SignInAPI(signinInput);
-    console.log("response", response);
+
+    let response = await SignInAPI(signinInput);
+
     if (response.token) {
       auth.setRoleAndToken(response.token, response.role[0]);
       navigate("/advocate");

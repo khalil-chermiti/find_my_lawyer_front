@@ -4,7 +4,7 @@ import LoginForm from "./components/LoginFrom";
 import AdvocateProfile from "./components/AdvocateProfile";
 import { useContext, useEffect } from "react";
 import { AuthContext } from "./contexts/AuthContext";
-import getAdvocateProfileData from "./apis/getAdvocateProfileData";
+import getAdvocateProfileData from "./apis/getAdvocateProfileDataAPI";
 
 function App() {
   const { auth, setUser, hydrateAuth, persistAuth } = useContext(AuthContext)!;

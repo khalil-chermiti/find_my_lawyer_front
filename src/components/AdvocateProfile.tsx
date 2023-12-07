@@ -1,51 +1,88 @@
-import { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import paymentAPI from "../apis/PaymentAPI";
+import uploadProfilePicture from "../apis/uploadProfilePictureAPI";
+import updateAdvocateProfile from "../apis/UpdateAdvocateProfileAPI";
 
 function AdvocateProfile() {
+  const [img, setImg] = useState<File>();
   const { auth } = useContext(AuthContext)!;
+  const [fields, setFields] = useState({
+    nom: "",
+    prenom: "",
+    telephone: "",
+    bio: "",
+  });
 
   const handlePayment = async () => {
     if (auth.token) {
       const data = await paymentAPI(auth.token);
       if (data.payment_url) window.location.href = data.payment_url;
-      console.log(data);
     }
   };
+
+  const handleUpdate = async (event: React.ChangeEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    // upload file to server
+    const formData = new FormData();
+    if (img) {
+      formData.append("file", img);
+      const response = await uploadProfilePicture(formData, auth.token!);
+      if (response.message) console.log(response.message);
+    }
+
+    // update user profile
+    const updateResponse = await updateAdvocateProfile(fields, auth.token!);
+    console.log(updateResponse);
+
+    window.location.reload();
+  };
+
+  const handleFieldChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFields(prev => ({ ...prev, [event.target.id]: event.target.value }));
+  };
+
+  useEffect(() => {
+    if (auth.user) {
+      setFields({
+        nom: auth.user.nom,
+        prenom: auth.user.prenom,
+        telephone: auth.user.telephone,
+        bio: auth.user.bio,
+      });
+    }
+  }, [auth.user]);
 
   if (auth.user)
     return (
       <section className="bg-white dark:bg-gray-900">
-        <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
-          <form>
+        <form onSubmit={handleUpdate}>
+          <div className="mx-auto rounded-full w-60 h-60 overflow-hidden">
+            <img
+              src={
+                auth.user.photoDeProfile
+                  ? auth.user.photoDeProfile
+                  : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+              }
+              alt="image description"
+            />
+          </div>
+
+          <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
             <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
               <div className="sm:col-span-2">
-                <img
-                  className="w-20 h-20 rounded "
-                  src={
-                    auth.user.photoDeProfile
-                      ? auth.user.photoDeProfile
-                      : "https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                  }
-                  alt="Large avatar"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  htmlFor="file_input"
-                >
-                  Upload file
-                </label>
-
                 <input
                   className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                  aria-describedby="file_input_help"
                   id="file_input"
                   type="file"
+                  onChange={e => {
+                    if (e.target.files) setImg(e.target.files![0]);
+                  }}
                 />
               </div>
+
               <div className="w-full">
                 <label
                   htmlFor="firstName"
@@ -54,13 +91,15 @@ function AdvocateProfile() {
                   first name
                 </label>
                 <input
+                  min={3}
+                  max={80}
                   type="text"
-                  name="firstName"
-                  id="firstName"
+                  name="nom"
+                  id="nom"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   placeholder="first name"
-                  defaultValue={auth.user.nom}
-                  disabled={false}
+                  defaultValue={fields.nom}
+                  onChange={handleFieldChange}
                 />
               </div>
 
@@ -72,13 +111,15 @@ function AdvocateProfile() {
                   last name
                 </label>
                 <input
+                  min={3}
+                  max={80}
                   type="text"
-                  name="lastName"
-                  id="lastName"
+                  name="prenom"
+                  id="prenom"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   placeholder="last name"
-                  defaultValue={auth.user.prenom}
-                  disabled={false}
+                  defaultValue={fields.prenom}
+                  onChange={handleFieldChange}
                 />
               </div>
 
@@ -107,12 +148,13 @@ function AdvocateProfile() {
                   telephone
                 </label>
                 <input
-                  type="text"
+                  type="tel"
                   name="telephone"
                   id="telephone"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                  defaultValue={auth.user.telephone}
+                  defaultValue={fields.telephone}
                   placeholder="enter phone number"
+                  onChange={handleFieldChange}
                 />
               </div>
 
@@ -124,10 +166,12 @@ function AdvocateProfile() {
                   bio
                 </label>
                 <textarea
+                  name="bio"
                   id="bio"
                   className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   placeholder="Your description here"
                   defaultValue={auth.user.bio}
+                  onChange={handleFieldChange}
                 ></textarea>
               </div>
             </div>
@@ -148,8 +192,8 @@ function AdvocateProfile() {
                 activate account
               </button>
             )}
-          </form>
-        </div>
+          </div>
+        </form>
       </section>
     );
 
